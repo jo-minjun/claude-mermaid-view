@@ -6,6 +6,8 @@ import { rewriteMermaid } from './mermaid'
 const COMMAND = 'mermaid-source'
 // 답변 앞 글머리(● )와 코드 블록 들여쓰기가 차지하는 칸
 const REPLY_GUTTER_COLUMNS = 4
+// 터미널이 답변 본문을 글머리 뒤로 들이는 칸
+const REPLY_TEXT_INDENT = 2
 
 const openSources = atom({ plugin: 'mermaid-view', key: 'openSources' } as const, [])
 const showAllSources = atom({ plugin: 'mermaid-view', key: 'showAllSources' } as const, false)
@@ -23,7 +25,7 @@ export const register: Register = on => {
   on('command.run', { command: COMMAND }, async $ => {
     const isShown = await update($, showAllSources, shown => !shown)
 
-    return { text: isShown ? 'mermaid 원문을 모두 펼쳤어요.' : 'mermaid 원문을 다시 접었어요.' }
+    return { text: isShown ? 'Showing every mermaid source.' : 'Folded every mermaid source.' }
   })
 
   on('ui.render', { component: 'AssistantMessage' }, async ($, e, next) => {
@@ -35,20 +37,30 @@ export const register: Register = on => {
     const open = await read($, member)
     const isAllShown = await read($, showAllSources)
     const columns = e.viewport?.columns
-    const { text, rendered } = rewriteMermaid(e.props.text, {
+    const { text, parts, rendered } = rewriteMermaid(e.props.text, {
       maxColumns: columns === undefined ? undefined : columns - REPLY_GUTTER_COLUMNS,
       isSourceOpen: index => isAllShown || open.includes(index),
     })
     if (rendered.length === 0) {
       return next(e)
     }
-
-    const drawn = await next({ ...e, props: { ...e.props, text } })
     if (isAllShown) {
-      return drawn
+      return next({ ...e, props: { ...e.props, text } })
     }
 
+    // 버튼을 각 다이어그램 바로 밑에 두려고 조각마다 엔진의 답변 렌더러로 그린다.
+    // 글머리(●)는 첫 조각에만 남긴다.
+    const drawn = await Promise.all(
+      parts.map((part, order) =>
+        next({
+          ...e,
+          props: { ...e.props, text: part.text, isFirstOfReply: e.props.isFirstOfReply && order === 0 },
+        }),
+      ),
+    )
+
     const { Box, Button } = $.ui.resolve(e)
+    const indent = e.surface === 'terminal' ? REPLY_TEXT_INDENT : 0
     const toggle = (index: number) =>
       update($, member, list =>
         list.includes(index) ? list.filter(one => one !== index) : [...list, index],
@@ -56,25 +68,23 @@ export const register: Register = on => {
 
     return (
       <Box flexDirection="column">
-        {drawn}
-        <Box columnGap={2}>
-          {rendered.map((index, order) => (
-            <Button
-              key={`source-${index}`}
-              plain
-              dimColor
-              label={sourceLabel(open.includes(index), rendered.length > 1 ? order + 1 : undefined)}
-              onPress={() => toggle(index)}
-            />
-          ))}
-        </Box>
+        {parts.flatMap(({ diagram }, order) =>
+          diagram === undefined
+            ? [drawn[order]]
+            : [
+                drawn[order],
+                <Box paddingLeft={indent}>
+                  <Button
+                    key={`source-${diagram}`}
+                    plain
+                    dimColor
+                    label={open.includes(diagram) ? '▾ hide mermaid source' : '▸ show mermaid source'}
+                    onPress={() => toggle(diagram)}
+                  />
+                </Box>,
+              ],
+        )}
       </Box>
     )
   })
-}
-
-function sourceLabel(isOpen: boolean, number: number | undefined): string {
-  const name = number === undefined ? 'mermaid 원문' : `mermaid 원문 ${number}`
-
-  return isOpen ? `▾ ${name} 접기` : `▸ ${name} 보기`
 }

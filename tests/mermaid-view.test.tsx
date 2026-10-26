@@ -27,23 +27,39 @@ const drawMarkdown = (on: On) =>
     return <Markdown text={e.props.text} />
   })
 
-test('한글 라벨 다이어그램을 정렬된 텍스트로 그리고 원문은 버튼으로 펼친다', async ($, on) => {
+test('다이어그램마다 바로 밑에 원문 버튼을 두고, 누른 다이어그램의 원문만 펼친다', async ($, on) => {
   drawMarkdown(on)
 
   for (const surface of ['terminal', 'desktop'] as const) {
     const ui = await $.ui.mount({
-      ...reply(`순서는 다음과 같아요.\n\n${FLOWCHART}\n\n끝.`),
+      ...reply(`첫 번째.\n\n${FLOWCHART}\n\n두 번째.\n\n${FLOWCHART}\n\n끝.`),
       requestId: `message-${surface}`,
       surface,
     })
 
-    const folded = await ui.find({ type: 'Markdown' })
-    expect(folded?.text).toBe(`순서는 다음과 같아요.\n\n\`\`\`\n${ART}\n\`\`\`\n\n끝.`)
+    const drawn = async () =>
+      (await ui.findAll({}))
+        .filter(found => found.type === 'Markdown' || found.type === 'Button')
+        .map(found => (found.type === 'Button' ? `[${found.key}]` : found.text))
 
-    await ui.press({ key: 'source-0' })
-    const opened = await ui.find({ type: 'Markdown' })
-    expect(opened?.text).toContain(`\`\`\`\n\n${FLOWCHART}`)
-    expect((await ui.find({ key: 'source-0' }))?.props.label).toBe('▾ mermaid 원문 접기')
+    expect(await drawn()).toEqual([
+      `첫 번째.\n\n\`\`\`\n${ART}\n\`\`\``,
+      '[source-0]',
+      `두 번째.\n\n\`\`\`\n${ART}\n\`\`\``,
+      '[source-1]',
+      '끝.',
+    ])
+
+    await ui.press({ key: 'source-1' })
+    expect(await drawn()).toEqual([
+      `첫 번째.\n\n\`\`\`\n${ART}\n\`\`\``,
+      '[source-0]',
+      `두 번째.\n\n\`\`\`\n${ART}\n\`\`\`\n\n${FLOWCHART}`,
+      '[source-1]',
+      '끝.',
+    ])
+    expect((await ui.find({ key: 'source-0' }))?.props.label).toBe('▸ show mermaid source')
+    expect((await ui.find({ key: 'source-1' }))?.props.label).toBe('▾ hide mermaid source')
     await ui.unmount()
   }
 })
@@ -60,7 +76,7 @@ test('/mermaid-source 는 모든 원문을 펼치고 버튼을 숨긴다', async
     origin: { kind: 'composer' },
     presentation: { isFullscreen: true, columns: 120 },
   })
-  expect(ran.text).toBe('mermaid 원문을 모두 펼쳤어요.')
+  expect(ran.text).toBe('Showing every mermaid source.')
 
   const ui = await $.ui.mount({ ...reply(FLOWCHART), surface: 'terminal' })
   expect((await ui.find({ type: 'Markdown' }))?.text).toBe(`\`\`\`\n${ART}\n\`\`\`\n\n${FLOWCHART}`)

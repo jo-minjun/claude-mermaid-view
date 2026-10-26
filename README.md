@@ -33,7 +33,7 @@ The transcript shows:
                          └────no─────►│ Cancel │
                                       │        │
                                       └────────┘
-▸ mermaid 원문 보기
+▸ show mermaid source
 ```
 
 ER diagrams keep their columns, keys and cardinality:
@@ -98,7 +98,7 @@ claude plugin install mermaid-view --marketplace jo-minjun/claude-mermaid-view
 
 Nothing to set up: mermaid blocks in replies are drawn as diagrams from then on.
 
-- **Show the source of one diagram:** click `▸ mermaid 원문 보기` ("show mermaid source") under it, and `▾ mermaid 원문 접기` ("fold") to hide it again. With several diagrams in one reply the buttons are numbered. (Clicking needs a terminal layout that takes mouse input, such as Claude Code's fullscreen mode.)
+- **Show the source of one diagram:** click `▸ show mermaid source` right under it, and `▾ hide mermaid source` to fold it again. Each diagram in a reply has its own button. (Clicking needs a terminal layout that takes mouse input, such as Claude Code's fullscreen mode.)
 - **Show or fold every source:** run `/mermaid-source`.
 - **Original text:** only the drawing changes. The stored message and what Claude reads back keep the mermaid source.
 
@@ -120,7 +120,7 @@ Known limits, from the renderer:
 
 ## How it works
 
-The mod hooks Claude Code's `ui.render` for `AssistantMessage` rows. For each closed mermaid fence it renders the source with the bundled renderer and passes the rewritten markdown on to Claude Code's own markdown renderer, adding a toggle button under the reply.
+The mod hooks Claude Code's `ui.render` for `AssistantMessage` rows. For each closed mermaid fence it renders the source with the bundled renderer and passes the rewritten markdown on to Claude Code's own reply renderer. The reply is drawn in pieces split after each diagram, so each diagram's toggle button sits right under it.
 
 The renderer counts every character as one column. To lay out wide characters correctly, the mod appends a one-column filler letter (U+A4D0) after each wide character before rendering and strips it from the output.
 

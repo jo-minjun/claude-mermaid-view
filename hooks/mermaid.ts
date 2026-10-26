@@ -7,8 +7,15 @@ export type MermaidBlock = {
   source: string
 }
 
+/** 답변을 다이어그램마다 끊은 조각. `diagram`이 있으면 그 다이어그램으로 끝난다 */
+export type ReplyPart = {
+  text: string
+  diagram?: number
+}
+
 export type RewriteResult = {
   text: string
+  parts: ReplyPart[]
   /** 다이어그램으로 바뀐 블록의 순번(메시지 안에서 0부터) */
   rendered: number[]
 }
@@ -86,8 +93,7 @@ export function rewriteMermaid(
   options: { maxColumns?: number; isSourceOpen: (index: number) => boolean },
 ): RewriteResult {
   const blocks = findMermaidBlocks(text)
-  const rendered: number[] = []
-  let out = ''
+  const parts: ReplyPart[] = []
   let cursor = 0
 
   blocks.forEach((block, index) => {
@@ -100,15 +106,23 @@ export function rewriteMermaid(
       return
     }
 
-    rendered.push(index)
-    out += text.slice(cursor, block.start) + fence(block.indent, '', art)
+    let part = text.slice(cursor, block.start) + fence(block.indent, '', art)
     if (options.isSourceOpen(index)) {
-      out += '\n\n' + fence(block.indent, 'mermaid', block.source)
+      part += '\n\n' + fence(block.indent, 'mermaid', block.source)
     }
+    parts.push({ text: part, diagram: index })
     cursor = block.end
   })
+  parts.push({ text: text.slice(cursor) })
 
-  return { text: out + text.slice(cursor), rendered }
+  return {
+    text: parts.map(part => part.text).join(''),
+    // 조각 사이의 빈 줄은 조각을 따로 그릴 때의 간격과 겹치므로 덜어 낸다
+    parts: parts
+      .map((part, order) => (order === 0 ? part : { ...part, text: part.text.replace(/^\s*\n/, '') }))
+      .filter(part => part.diagram !== undefined || part.text.trim() !== ''),
+    rendered: parts.flatMap(part => (part.diagram === undefined ? [] : [part.diagram])),
+  }
 }
 
 function fence(indent: string, language: string, body: string): string {
