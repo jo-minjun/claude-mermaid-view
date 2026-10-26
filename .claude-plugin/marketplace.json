@@ -1,0 +1,6 @@
+{
+  "name": "claude-mermaid-view",
+  "owner": { "name": "jo-minjun" },
+  "description": "Claude Code mod that draws mermaid blocks in replies as terminal text diagrams",
+  "plugins": [{ "name": "mermaid-view", "source": "./" }]
+}
