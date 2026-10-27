@@ -105,7 +105,7 @@ Nothing to set up: mermaid blocks in replies are drawn as diagrams from then on.
 A block is left as its source when:
 
 - the renderer cannot read it (a diagram type or syntax it does not support, a typo),
-- the diagram is wider than the terminal,
+- the diagram is wider than the terminal, even after a retry: a flowchart or state diagram is redrawn with tighter spacing, and a sequence diagram with its message labels and participant names wrapped at word breaks (self-messages are not wrapped, since the renderer cannot draw them on several lines),
 - the block is still streaming (no closing fence yet).
 
 ## Supported diagrams

@@ -32,6 +32,20 @@ const WIDE_CHAR =
 // 채움 글자도 문자(Lisu, U+A4D0)여야 하고, 실제 다이어그램에 나올 일이 거의 없는 것을 고른다.
 const WIDTH_PAD = 'ꓐ'
 
+// 화면보다 넓을 때 한 번 더 그려 보는 좁은 간격. flowchart·state 렌더러만 읽는다.
+// paddingY를 3보다 줄이면 간선 라벨이 상자 테두리를 덮어쓴다.
+const COMPACT_LAYOUT = { paddingX: 2, paddingY: 3, boxBorderPadding: 0 }
+
+// sequence 렌더러는 간격 옵션을 읽지 않아서, 넓으면 라벨을 줄바꿈해 다시 그린다.
+// 라벨 한 줄의 최대 칸 수를 큰 값부터 줄여 가며 시도한다.
+const SEQUENCE_WRAP_COLUMNS = [40, 30, 20]
+
+// 렌더러의 participant·메시지 문법과 같은 모양
+const SEQUENCE_HEADER = /^sequenceDiagram\s*$/i
+const PARTICIPANT_LINE = /^(\s*(?:participant|actor)\s+\S+?\s+as\s+)(.+)$/
+const MESSAGE_LINE = /^(\s*(\S+?)\s*(?:--?>?>|--?[)x]|--?>>|--?>)\s*[+-]?(\S+?)\s*:\s*)(.+)$/
+const LINE_BREAK = /<br\s*\/?>|\\n/i
+
 const CACHE_LIMIT = 64
 const cache = new Map<string, string | null>()
 
@@ -51,25 +65,26 @@ export function displayWidth(line: string): number {
   return [...line].length + (line.match(WIDE_CHAR)?.length ?? 0)
 }
 
-export function renderDiagram(source: string): string | null {
-  const cached = cache.get(source)
+export function renderDiagram(source: string, compact = false): string | null {
+  const key = JSON.stringify([source, compact])
+  const cached = cache.get(key)
   if (cached !== undefined) {
     return cached
   }
 
-  const art = renderUncached(source)
+  const art = renderUncached(source, compact)
   if (cache.size >= CACHE_LIMIT) {
     cache.delete(cache.keys().next().value!)
   }
-  cache.set(source, art)
+  cache.set(key, art)
 
   return art
 }
 
-function renderUncached(source: string): string | null {
+function renderUncached(source: string, compact: boolean): string | null {
   try {
     const padded = source.replace(WIDE_CHAR, char => char + WIDTH_PAD)
-    const art = renderMermaidASCII(padded, { colorMode: 'none' })
+    const art = renderMermaidASCII(padded, { colorMode: 'none', ...(compact ? COMPACT_LAYOUT : {}) })
       .split(WIDTH_PAD)
       .join('')
       .split('\n')
@@ -85,8 +100,74 @@ function renderUncached(source: string): string | null {
 }
 
 /**
+ * 넘치면 다시 그려 본다: flowchart 등은 좁은 간격으로, sequence는 라벨을 줄바꿈해서.
+ * 그래도 넘치면 null
+ */
+function renderFitting(source: string, maxColumns: number | undefined): string | null {
+  const fits = (art: string | null) =>
+    art !== null && (maxColumns === undefined || Math.max(...art.split('\n').map(displayWidth)) <= maxColumns)
+
+  const art = renderDiagram(source)
+  if (art === null || fits(art)) {
+    return art
+  }
+
+  const retries = SEQUENCE_HEADER.test(source.trim().split('\n')[0]?.trim() ?? '')
+    ? SEQUENCE_WRAP_COLUMNS.map(columns => () => renderDiagram(wrapSequenceLabels(source, columns)))
+    : [() => renderDiagram(source, true)]
+  for (const retry of retries) {
+    const again = retry()
+    if (fits(again)) {
+      return again
+    }
+  }
+
+  return null
+}
+
+/** 참가자 표시 이름과 메시지 라벨을 `maxColumns` 칸 안쪽으로 줄바꿈한 원문 */
+function wrapSequenceLabels(source: string, maxColumns: number): string {
+  return source
+    .split('\n')
+    .map(line => {
+      const participant = line.match(PARTICIPANT_LINE)
+      if (participant) {
+        return participant[1] + wrapLabel(participant[2]!, maxColumns)
+      }
+      // 자기 메시지는 렌더러가 줄바꿈을 나누지 않고 그대로 찍어 다이어그램이 깨진다
+      const message = line.match(MESSAGE_LINE)
+      if (message && message[2] !== message[3]) {
+        return message[1] + wrapLabel(message[4]!, maxColumns)
+      }
+
+      return line
+    })
+    .join('\n')
+}
+
+function wrapLabel(label: string, maxColumns: number): string {
+  return label
+    .split(LINE_BREAK)
+    .flatMap(line => {
+      const wrapped: string[] = []
+      for (const word of line.trim().split(/\s+/)) {
+        const last = wrapped.at(-1)
+        // 한 단어가 한도보다 길면 끊지 않고 그 줄에 그대로 둔다
+        if (last !== undefined && displayWidth(`${last} ${word}`) <= maxColumns) {
+          wrapped[wrapped.length - 1] = `${last} ${word}`
+        } else {
+          wrapped.push(word)
+        }
+      }
+
+      return wrapped
+    })
+    .join('<br>')
+}
+
+/**
  * mermaid 블록을 텍스트 다이어그램 코드 블록으로 바꾼다. 변환에 실패했거나
- * `maxColumns`보다 넓은 블록은 원문 그대로 둔다.
+ * 다시 그려도 `maxColumns`보다 넓은 블록은 원문 그대로 둔다.
  */
 export function rewriteMermaid(
   text: string,
@@ -97,12 +178,8 @@ export function rewriteMermaid(
   let cursor = 0
 
   blocks.forEach((block, index) => {
-    const art = renderDiagram(block.source)
-    const fits =
-      art !== null &&
-      (options.maxColumns === undefined ||
-        Math.max(...art.split('\n').map(displayWidth)) <= options.maxColumns)
-    if (!fits) {
+    const art = renderFitting(block.source, options.maxColumns)
+    if (art === null) {
       return
     }
 

@@ -84,6 +84,46 @@ test('/mermaid-source 는 모든 원문을 펼치고 버튼을 숨긴다', async
   await ui.unmount()
 })
 
+test('기본 간격으로 화면보다 넓은 flowchart는 좁은 간격으로 다시 그린다', async ($, on) => {
+  drawMarkdown(on)
+  const ui = await $.ui.mount({
+    ...reply('```mermaid\nflowchart LR\n  A[주문] --> B[결제]\n```', 20),
+    surface: 'terminal',
+  })
+
+  expect((await ui.find({ type: 'Markdown' }))?.text).toBe(
+    ['```', '┌────┐  ┌────┐', '│주문├─►│결제│', '└────┘  └────┘', '```'].join('\n'),
+  )
+  await ui.unmount()
+})
+
+test('화면보다 넓은 sequence 다이어그램은 들어가는 가장 긴 줄 길이로 라벨을 줄바꿈해 그린다', async ($, on) => {
+  drawMarkdown(on)
+  const ui = await $.ui.mount({
+    ...reply('```mermaid\nsequenceDiagram\n  A->>B: 주문 목록을 최근 90일 기준으로 조회한다\n```', 50),
+    surface: 'terminal',
+  })
+
+  expect((await ui.find({ type: 'Markdown' }))?.text).toBe(
+    [
+      '```',
+      ' ┌───┐                               ┌───┐',
+      ' │ A │                               │ B │',
+      ' └─┬─┘                               └─┬─┘',
+      '   │                                   │',
+      '   │  주문 목록을 최근 90일 기준으로   │',
+      '   │             조회한다              │',
+      '   │───────────────────────────────────▶',
+      '   │                                   │',
+      ' ┌─┴─┐                               ┌─┴─┐',
+      ' │ A │                               │ B │',
+      ' └───┘                               └───┘',
+      '```',
+    ].join('\n'),
+  )
+  await ui.unmount()
+})
+
 test('변환할 수 없거나 아직 닫히지 않았거나 화면보다 넓으면 원문 그대로 둔다', async ($, on) => {
   drawMarkdown(on)
   const cases = [
