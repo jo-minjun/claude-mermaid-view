@@ -1,6 +1,6 @@
 {
   "name": "mermaid-view",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Draws mermaid code blocks in Claude's replies as text diagrams in the terminal, with the source folded below",
   "author": { "name": "jo-minjun", "url": "https://github.com/jo-minjun" },
   "license": "MIT",
