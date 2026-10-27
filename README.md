@@ -82,6 +82,28 @@ Korean, Chinese and Japanese labels and emoji are laid out at their real termina
 
 (A browser font may not draw these characters at exactly two columns, so this example can look uneven on GitHub. It lines up in a terminal.)
 
+A block inside a blockquote (or a list item) is drawn in place, so it stays inside the quote:
+
+````markdown
+> **Retry policy**
+>
+> ```mermaid
+> flowchart LR
+>   A[Order] --> B{Paid?}
+>   B -->|no| C[Retry once]
+> ```
+````
+
+> **Retry policy**
+>
+> ```
+> ┌───────┐     ◇───────◇     ┌────────────┐
+> │       │     │       │     │            │
+> │ Order ├────►│ Paid? ├─no─►│ Retry once │
+> │       │     │       │     │            │
+> └───────┘     ◇───────◇     └────────────┘
+> ```
+
 ## Install
 
 At the prompt of a Claude Code terminal session:
