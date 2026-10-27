@@ -167,4 +167,4 @@ scripts/build-vendor.sh 1.1.3
 
 ## License
 
-MIT. The bundled renderer keeps its own licenses: beautiful-mermaid (MIT) and entities (BSD-2-Clause), in `hooks/vendor/`.
+MIT. The bundled renderer, beautiful-mermaid, is also MIT; its license is in `hooks/vendor/`.

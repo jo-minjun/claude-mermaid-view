@@ -16,15 +16,21 @@ npm install --silent "beautiful-mermaid@$VERSION"
 for PATCH in "$ROOT"/scripts/patches/*.patch; do
   patch --silent -p1 -d node_modules/beautiful-mermaid < "$PATCH"
 done
-ENTITIES_VERSION="$(node -p "require('./node_modules/entities/package.json').version")"
 echo "export { renderMermaidASCII } from './node_modules/beautiful-mermaid/src/ascii/index.ts'" > entry.ts
 bun build entry.ts --target=browser --format=esm --outfile=bundle.js
 
+# 다른 패키지가 번들에 섞이면 그 라이선스도 hooks/vendor/ 에 두어야 하므로 멈춘다
+OTHERS="$(grep -o '^// node_modules/[^/]*' bundle.js | sort -u | grep -v '/beautiful-mermaid$' || true)"
+if [ -n "$OTHERS" ]; then
+  echo "beautiful-mermaid 외 패키지가 번들에 들어갔다. 라이선스 파일과 README를 갱신하고 이 검사를 고쳐라:" >&2
+  echo "$OTHERS" >&2
+  exit 1
+fi
+
 OUT="$ROOT/hooks/vendor"
 {
-  echo "// beautiful-mermaid $VERSION (src/ascii, with scripts/patches applied) bundled with entities $ENTITIES_VERSION by scripts/build-vendor.sh. Licenses: LICENSE-beautiful-mermaid, LICENSE-entities."
+  echo "// beautiful-mermaid $VERSION (src/ascii, with scripts/patches applied) bundled by scripts/build-vendor.sh. License: LICENSE-beautiful-mermaid."
   cat bundle.js
 } > "$OUT/beautiful-mermaid.js"
 cp node_modules/beautiful-mermaid/LICENSE "$OUT/LICENSE-beautiful-mermaid"
-cp node_modules/entities/LICENSE "$OUT/LICENSE-entities"
 echo "wrote $OUT/beautiful-mermaid.js"

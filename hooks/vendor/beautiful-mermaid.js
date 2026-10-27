@@ -1,4 +1,4 @@
-// beautiful-mermaid 1.1.3 (src/ascii, with scripts/patches applied) bundled with entities 7.0.1 by scripts/build-vendor.sh. Licenses: LICENSE-beautiful-mermaid, LICENSE-entities.
+// beautiful-mermaid 1.1.3 (src/ascii, with scripts/patches applied) bundled by scripts/build-vendor.sh. License: LICENSE-beautiful-mermaid.
 // node_modules/beautiful-mermaid/src/text-metrics.ts
 var NARROW_CHARS = new Set(["i", "l", "t", "f", "j", "I", "1", "!", "|", ".", ",", ":", ";", "'"]);
 var WIDE_CHARS = new Set(["W", "M", "w", "m", "@", "%"]);

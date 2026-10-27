@@ -167,4 +167,4 @@ scripts/build-vendor.sh 1.1.3
 
 ## 라이선스
 
-MIT. 번들된 렌더러는 각자의 라이선스를 따릅니다: beautiful-mermaid(MIT), entities(BSD-2-Clause). 라이선스 파일은 `hooks/vendor/`에 있습니다.
+MIT. 번들된 렌더러 beautiful-mermaid도 MIT이고, 라이선스 파일은 `hooks/vendor/`에 있습니다.
