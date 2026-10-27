@@ -2,6 +2,8 @@
 
 A [Claude Code](https://claude.com/claude-code) mod that draws the ` ```mermaid ` code blocks in Claude's replies as text diagrams, right in the terminal. The mermaid source is folded under each diagram, one click away.
 
+![A reply's sequence diagram drawn in the terminal, its source unfolded and folded again, then opened in mermaid.live](docs/demo.gif)
+
 ## Example
 
 Claude replies with:
