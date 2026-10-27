@@ -1,0 +1,21 @@
+--- a/src/ascii/sequence.ts
++++ b/src/ascii/sequence.ts
+@@ -255,7 +255,8 @@
+ 
+   for (let i = 0; i < diagram.actors.length; i++) {
+     const x = llX[i]!
+-    for (let y = actorBoxH; y <= footerY; y++) {
++    // Start below this actor's own box: boxes differ in height when labels have different line counts
++    for (let y = actorBoxHeights[i]!; y <= footerY; y++) {
+       setC(x, y, V, 'line')
+     }
+   }
+@@ -269,7 +270,7 @@
+ 
+     // Lifeline junctions on box borders (Unicode only)
+     if (!useAscii) {
+-      setC(llX[i]!, actorBoxH - 1, JT, 'junction')
++      setC(llX[i]!, actorBoxHeights[i]! - 1, JT, 'junction')
+       setC(llX[i]!, footerY, JB, 'junction')
+     }
+   }

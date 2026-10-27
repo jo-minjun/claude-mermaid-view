@@ -1,4 +1,4 @@
-// beautiful-mermaid 1.1.3 (src/ascii) bundled with entities 7.0.1 by scripts/build-vendor.sh. Licenses: LICENSE-beautiful-mermaid, LICENSE-entities.
+// beautiful-mermaid 1.1.3 (src/ascii, with scripts/patches applied) bundled with entities 7.0.1 by scripts/build-vendor.sh. Licenses: LICENSE-beautiful-mermaid, LICENSE-entities.
 // node_modules/beautiful-mermaid/src/text-metrics.ts
 var NARROW_CHARS = new Set(["i", "l", "t", "f", "j", "I", "1", "!", "|", ".", ",", ":", ";", "'"]);
 var WIDE_CHARS = new Set(["W", "M", "w", "m", "@", "%"]);
@@ -3773,7 +3773,7 @@ function renderSequenceAscii(text, config, colorMode, theme) {
   }
   for (let i = 0;i < diagram.actors.length; i++) {
     const x = llX[i];
-    for (let y = actorBoxH;y <= footerY; y++) {
+    for (let y = actorBoxHeights[i];y <= footerY; y++) {
       setC(x, y, V, "line");
     }
   }
@@ -3782,7 +3782,7 @@ function renderSequenceAscii(text, config, colorMode, theme) {
     drawActorBox(llX[i], 0, actor.label);
     drawActorBox(llX[i], footerY, actor.label);
     if (!useAscii) {
-      setC(llX[i], actorBoxH - 1, JT, "junction");
+      setC(llX[i], actorBoxHeights[i] - 1, JT, "junction");
       setC(llX[i], footerY, JB, "junction");
     }
   }

@@ -124,6 +124,34 @@ test('화면보다 넓은 sequence 다이어그램은 들어가는 가장 긴 �
   await ui.unmount()
 })
 
+test('참가자 박스 높이가 달라도 생명선은 각 박스 바로 밑에서 시작한다', async ($, on) => {
+  drawMarkdown(on)
+  const ui = await $.ui.mount({
+    ...reply('```mermaid\nsequenceDiagram\n  participant A as 주문<br>서버\n  A->>B: 조회\n```'),
+    surface: 'terminal',
+  })
+
+  expect((await ui.find({ type: 'Markdown' }))?.text).toBe(
+    [
+      '```',
+      '┌──────┐    ┌───┐',
+      '│ 주문 │    │ B │',
+      '│ 서버 │    └─┬─┘',
+      '└───┬──┘      │',
+      '    │         │',
+      '    │  조회   │',
+      '    │─────────▶',
+      '    │         │',
+      '┌───┴──┐    ┌─┴─┐',
+      '│ 주문 │    │ B │',
+      '│ 서버 │    └───┘',
+      '└──────┘',
+      '```',
+    ].join('\n'),
+  )
+  await ui.unmount()
+})
+
 test('변환할 수 없거나 아직 닫히지 않았거나 화면보다 넓으면 원문 그대로 둔다', async ($, on) => {
   drawMarkdown(on)
   const cases = [

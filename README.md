@@ -131,7 +131,7 @@ claude plugin validate .
 claude plugin test .
 ```
 
-`hooks/vendor/beautiful-mermaid.js` is the renderer's `src/ascii` entry bundled into one ES module, because a hooks module cannot import npm packages. To rebuild it (needs `npm` and `bun`):
+`hooks/vendor/beautiful-mermaid.js` is the renderer's `src/ascii` entry bundled into one ES module, because a hooks module cannot import npm packages. Fixes to the renderer live in `scripts/patches/` and are applied to the package source before bundling. To rebuild it (needs `npm` and `bun`):
 
 ```sh
 scripts/build-vendor.sh 1.1.3
