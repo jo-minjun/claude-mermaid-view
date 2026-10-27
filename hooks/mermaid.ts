@@ -7,10 +7,11 @@ export type MermaidBlock = {
   source: string
 }
 
-/** 답변을 다이어그램마다 끊은 조각. `diagram`이 있으면 그 다이어그램으로 끝난다 */
+/** 답변을 다이어그램마다 끊은 조각. `diagram`이 있으면 그 다이어그램으로 끝나고, `source`는 그 원문이다 */
 export type ReplyPart = {
   text: string
   diagram?: number
+  source?: string
 }
 
 export type RewriteResult = {
@@ -49,6 +50,11 @@ const SEQUENCE_HEADER = /^sequenceDiagram\s*$/i
 const PARTICIPANT_LINE = /^(\s*(?:participant|actor)\s+\S+?\s+as\s+)(.+)$/
 const MESSAGE_LINE = /^(\s*(\S+?)\s*(?:--?>?>|--?[)x]|--?>>|--?>)\s*[+-]?(\S+?)\s*:\s*)(.+)$/
 const LINE_BREAK = /<br\s*\/?>|\\n/i
+
+// mod 런타임에 CompressionStream이 없어 mermaid.live의 압축(pako) 대신 base64 형식을 쓴다
+const MERMAID_LIVE_URL = 'https://mermaid.live/edit#base64:'
+// Link가 받는 href 최대 길이
+const LINK_MAX_LENGTH = 2048
 
 const CACHE_LIMIT = 64
 const cache = new Map<string, string | null>()
@@ -206,7 +212,7 @@ export function rewriteMermaid(
       // 사이의 빈 줄에도 인용문 표시를 남겨야 인용문이 끊기지 않는다
       part += `\n${block.indent.trimEnd()}\n` + fence(block.indent, 'mermaid', block.source)
     }
-    parts.push({ text: part, diagram: index })
+    parts.push({ text: part, diagram: index, source: block.source })
     cursor = block.end
   })
   parts.push({ text: text.slice(cursor) })
@@ -225,4 +231,14 @@ function fence(indent: string, language: string, body: string): string {
   const lines = body.split('\n').map(line => indent + line)
 
   return [indent + '```' + language, ...lines, indent + '```'].join('\n')
+}
+
+/** 원문을 편집기에 띄우는 mermaid.live 주소. Link에 담기에 너무 길면 null */
+export function liveEditorUrl(source: string): string | null {
+  const state = JSON.stringify({ code: source, mermaid: '{"theme":"default"}', updateDiagram: true, rough: false })
+  const bytes = new TextEncoder().encode(state)
+  const base64 = btoa(Array.from(bytes, byte => String.fromCharCode(byte)).join(''))
+  const url = MERMAID_LIVE_URL + base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+
+  return url.length <= LINK_MAX_LENGTH ? url : null
 }

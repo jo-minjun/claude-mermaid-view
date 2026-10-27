@@ -84,6 +84,27 @@ test('/mermaid-source 는 모든 원문을 펼치고 버튼을 숨긴다', async
   await ui.unmount()
 })
 
+test('mermaid.live 링크에 원문을 담고, 링크에 담기에 너무 긴 원문은 링크를 뺀다', async ($, on) => {
+  drawMarkdown(on)
+  const long = `flowchart TD\n  A[주문 생성]\n${Array.from({ length: 40 }, (_, i) => `  %% 주문 생성 단계 설명 ${i}`).join('\n')}`
+  const ui = await $.ui.mount({
+    ...reply(`${FLOWCHART}\n\n\`\`\`mermaid\n${long}\n\`\`\``),
+    surface: 'terminal',
+  })
+
+  const links = await ui.findAll({ type: 'Link' })
+  expect(links).toHaveLength(1)
+  const href = links[0]?.props.href as string
+  const [base, encoded] = href.split('#base64:')
+  const json = new TextDecoder().decode(
+    Uint8Array.from(atob(encoded!.replace(/-/g, '+').replace(/_/g, '/')), char => char.charCodeAt(0)),
+  )
+  expect(base).toBe('https://mermaid.live/edit')
+  expect(JSON.parse(json).code).toBe('flowchart TD\n  A[주문 생성]')
+  expect(await ui.find({ key: 'source-1' })).toBeDefined()
+  await ui.unmount()
+})
+
 test('인용문 안의 블록도 인용문 표시를 유지한 채 그린다', async ($, on) => {
   drawMarkdown(on)
   const quoted = '> 설명.\n>\n> ```mermaid\n> flowchart TD\n>   A[주문 생성]\n> ```'

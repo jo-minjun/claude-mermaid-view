@@ -33,7 +33,7 @@ The transcript shows:
                          └────no─────►│ Cancel │
                                       │        │
                                       └────────┘
-▸ show mermaid source
+▸ show mermaid source  ·  open in mermaid.live
 ```
 
 ER diagrams keep their columns, keys and cardinality:
@@ -100,6 +100,7 @@ Nothing to set up: mermaid blocks in replies are drawn as diagrams from then on.
 
 - **Show the source of one diagram:** click `▸ show mermaid source` right under it, and `▾ hide mermaid source` to fold it again. Each diagram in a reply has its own button. (Clicking needs a terminal layout that takes mouse input, such as Claude Code's fullscreen mode.)
 - **Show or fold every source:** run `/mermaid-source`.
+- **Open in mermaid.live:** the link beside the button opens the diagram in the [mermaid.live](https://mermaid.live) editor, where it can be edited or exported as SVG or PNG. The source rides in the link's `#` fragment, which the browser does not send to the server; the page reads it in the browser. A source too long for a link (over 2048 characters once encoded) gets no link.
 - **Original text:** only the drawing changes. The stored message and what Claude reads back keep the mermaid source.
 
 A block is left as its source when:

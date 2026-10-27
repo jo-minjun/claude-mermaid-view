@@ -1,7 +1,7 @@
 import { atom, memberOf, read, update } from 'claude-code'
 import type { Register } from 'claude-code'
 
-import { rewriteMermaid } from './mermaid'
+import { liveEditorUrl, rewriteMermaid } from './mermaid'
 
 const COMMAND = 'mermaid-source'
 // 답변 앞 글머리(● )와 코드 블록 들여쓰기가 차지하는 칸
@@ -59,7 +59,7 @@ export const register: Register = on => {
       ),
     )
 
-    const { Box, Button } = $.ui.resolve(e)
+    const { Box, Button, Link, Text } = $.ui.resolve(e)
     const indent = e.surface === 'terminal' ? REPLY_TEXT_INDENT : 0
     // 엔진은 글머리를 뺀 조각을 본문 들여쓰기 없이 그리므로, 첫 조각의 본문 칸에 맞춰 들인다
     const continuationIndent = e.props.isFirstOfReply ? indent : 0
@@ -70,8 +70,9 @@ export const register: Register = on => {
 
     return (
       <Box flexDirection="column">
-        {parts.flatMap(({ diagram }, order) => {
+        {parts.flatMap(({ diagram, source }, order) => {
           const part = order === 0 ? drawn[order] : <Box paddingLeft={continuationIndent}>{drawn[order]}</Box>
+          const liveUrl = source === undefined ? null : liveEditorUrl(source)
 
           return diagram === undefined
             ? [part]
@@ -85,6 +86,12 @@ export const register: Register = on => {
                     label={open.includes(diagram) ? '▾ hide mermaid source' : '▸ show mermaid source'}
                     onPress={() => toggle(diagram)}
                   />
+                  {liveUrl !== null && (
+                    <Text dimColor>
+                      {'  ·  '}
+                      <Link href={liveUrl} label="open in mermaid.live" />
+                    </Text>
+                  )}
                 </Box>,
               ]
         })}
