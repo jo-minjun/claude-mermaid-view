@@ -84,6 +84,24 @@ test('/mermaid-source 는 모든 원문을 펼치고 버튼을 숨긴다', async
   await ui.unmount()
 })
 
+test('이모지도 한글처럼 2칸으로 맞춰 그린다', async ($, on) => {
+  drawMarkdown(on)
+  const ui = await $.ui.mount({ ...reply('```mermaid\nflowchart LR\n  A[✅] --> B[😀]\n```'), surface: 'terminal' })
+
+  expect((await ui.find({ type: 'Markdown' }))?.text).toBe(
+    [
+      '```',
+      '┌────┐     ┌────┐',
+      '│    │     │    │',
+      '│ ✅ ├────►│ 😀 │',
+      '│    │     │    │',
+      '└────┘     └────┘',
+      '```',
+    ].join('\n'),
+  )
+  await ui.unmount()
+})
+
 test('기본 간격으로 화면보다 넓은 flowchart는 좁은 간격으로 다시 그린다', async ($, on) => {
   drawMarkdown(on)
   const ui = await $.ui.mount({

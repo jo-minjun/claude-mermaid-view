@@ -23,12 +23,13 @@ export type RewriteResult = {
 const MERMAID_FENCE =
   /^([ \t]*)(`{3,}|~{3,})[ \t]*mermaid[ \t]*\r?\n([\s\S]*?)\r?\n[ \t]*\2[ \t]*$/gm
 
-// 터미널에서 2칸을 차지하는 글자: 한글, CJK, 전각 기호, 이모지
+// 터미널에서 2칸을 차지하는 글자: 한글, CJK, 전각 기호, 기본으로 그림으로 그리는 이모지(✅, 😀 등)
 const WIDE_CHAR =
-  /[ᄀ-ᅟ⺀-〾ぁ-㏿㐀-䶿一-鿿ꥠ-꥿가-힣豈-﫿︰-﹏＀-｠￠-￦]|[\u{1F300}-\u{1FAFF}]/gu
+  /[ᄀ-ᅟ⺀-〾ぁ-㏿㐀-䶿一-鿿ꥠ-꥿가-힣豈-﫿︰-﹏＀-｠￠-￦]|\p{Emoji_Presentation}/gu
 
-// 렌더러는 모든 글자를 1칸으로 계산하므로, 넓은 글자 뒤에 1칸짜리 채움 글자를 붙여
-// 자리를 잡게 한 뒤 출력에서 지운다. state 다이어그램의 이름이 \p{L} 만 받아서
+// 렌더러는 글자 폭을 문자열 length로 세므로, 넓은 글자 뒤에 모자란 칸만큼 1칸짜리 채움 글자를 붙여
+// 자리를 잡게 한 뒤 출력에서 지운다. 😀처럼 서로게이트 쌍인 글자는 이미 2로 세어져 붙이지 않는다.
+// state 다이어그램의 이름이 \p{L} 만 받아서
 // 채움 글자도 문자(Lisu, U+A4D0)여야 하고, 실제 다이어그램에 나올 일이 거의 없는 것을 고른다.
 const WIDTH_PAD = 'ꓐ'
 
@@ -83,7 +84,7 @@ export function renderDiagram(source: string, compact = false): string | null {
 
 function renderUncached(source: string, compact: boolean): string | null {
   try {
-    const padded = source.replace(WIDE_CHAR, char => char + WIDTH_PAD)
+    const padded = source.replace(WIDE_CHAR, char => char + WIDTH_PAD.repeat(2 - char.length))
     const art = renderMermaidASCII(padded, { colorMode: 'none', ...(compact ? COMPACT_LAYOUT : {}) })
       .split(WIDTH_PAD)
       .join('')

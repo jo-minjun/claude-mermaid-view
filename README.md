@@ -117,6 +117,7 @@ Known limits, from the renderer:
 - Edge labels longer than the gap between two boxes are cut (`ordered in` → `ordere`).
 - Large graphs with many crossing edges get hard to read in text.
 - Flowchart node IDs must be ASCII (`A[주문]` works, `주문[주문]` does not); labels can be any language.
+- Emoji made of several code points (`❤️`, `👨‍👩‍👧`, flags, skin tones) can still be off by a column, since terminals draw them at different widths.
 
 ## How it works
 
