@@ -61,6 +61,8 @@ export const register: Register = on => {
 
     const { Box, Button } = $.ui.resolve(e)
     const indent = e.surface === 'terminal' ? REPLY_TEXT_INDENT : 0
+    // 엔진은 글머리를 뺀 조각을 본문 들여쓰기 없이 그리므로, 첫 조각의 본문 칸에 맞춰 들인다
+    const continuationIndent = e.props.isFirstOfReply ? indent : 0
     const toggle = (index: number) =>
       update($, member, list =>
         list.includes(index) ? list.filter(one => one !== index) : [...list, index],
@@ -68,11 +70,13 @@ export const register: Register = on => {
 
     return (
       <Box flexDirection="column">
-        {parts.flatMap(({ diagram }, order) =>
-          diagram === undefined
-            ? [drawn[order]]
+        {parts.flatMap(({ diagram }, order) => {
+          const part = order === 0 ? drawn[order] : <Box paddingLeft={continuationIndent}>{drawn[order]}</Box>
+
+          return diagram === undefined
+            ? [part]
             : [
-                drawn[order],
+                part,
                 <Box paddingLeft={indent}>
                   <Button
                     key={`source-${diagram}`}
@@ -82,8 +86,8 @@ export const register: Register = on => {
                     onPress={() => toggle(diagram)}
                   />
                 </Box>,
-              ],
-        )}
+              ]
+        })}
       </Box>
     )
   })

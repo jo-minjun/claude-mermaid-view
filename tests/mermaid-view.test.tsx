@@ -204,3 +204,19 @@ test('변환할 수 없거나 아직 닫히지 않았거나 화면보다 넓으�
     await ui.unmount()
   }
 })
+
+test('다이어그램 뒤 조각은 첫 조각의 본문 칸에 맞춰 들인다', async ($, on) => {
+  drawMarkdown(on)
+  const text = `앞.\n\n${FLOWCHART}\n\n끝.`
+
+  for (const [isFirstOfReply, paddingLeft] of [
+    [true, 2],
+    [false, 0],
+  ] as const) {
+    const target = reply(text)
+    const ui = await $.ui.mount({ ...target, props: { ...target.props, isFirstOfReply }, surface: 'terminal' })
+    const rest = (await ui.findAll({ type: 'Box', text: '끝.' })).find(box => box.text === '끝.')
+    expect(rest?.props.paddingLeft).toBe(paddingLeft)
+    await ui.unmount()
+  }
+})
