@@ -1,5 +1,5 @@
 import type { On } from 'claude-code'
-import { expect, test } from 'claude-code/testing'
+import { expect, mock, test } from 'claude-code/testing'
 
 const FLOWCHART = '```mermaid\nflowchart TD\n  A[주문 생성]\n```'
 const ART = [
@@ -82,6 +82,44 @@ test('/mermaid-source 는 모든 원문을 펼치고 버튼을 숨긴다', async
   expect((await ui.find({ type: 'Markdown' }))?.text).toBe(`\`\`\`\n${ART}\n\`\`\`\n\n${FLOWCHART}`)
   expect(await ui.findAll({ type: 'Button' })).toHaveLength(0)
   await ui.unmount()
+})
+
+test('기본으로 mermaid로 그리라는 지시를 시스템 프롬프트에 넣고, /mermaid-prompt 로 끄고 켠다', async ($, on) => {
+  mock.store(on)
+  on('prompt.compose', () => ({ sections: [{ id: 'intro', text: 'engine', scope: 'shared' }] }))
+  on('command.register', () => ({ value: { command: 'mermaid-prompt' } }))
+  on('session.start', (_, e) => ({ cwd: e.cwd }))
+  await $.session.start({ cwd: '/', surface: 'terminal', isInteractive: true })
+
+  const compose = async (surfaces: readonly ('terminal' | 'desktop')[]) =>
+    (
+      await $.prompt.compose({
+        model: 'claude-opus-5-5',
+        promptModel: 'claude-opus-5-5',
+        surfaces,
+        tools: [],
+        outputStyle: null,
+        traits: [],
+      })
+    ).sections.map(section => section.id)
+  const toggle = async () =>
+    (
+      await $.command.run({
+        command: 'mermaid-prompt',
+        args: '',
+        origin: { kind: 'composer' },
+        presentation: { isFullscreen: true, columns: 120 },
+      })
+    ).text
+
+  expect(await compose(['terminal'])).toEqual(['intro', 'mermaid-view:diagrams'])
+  expect(await compose([])).toEqual(['intro'])
+
+  expect(await toggle()).toBe('Stopped asking Claude to draw diagrams as mermaid, from the next message.')
+  expect(await compose(['terminal'])).toEqual(['intro'])
+
+  expect(await toggle()).toBe('Asking Claude to draw diagrams as mermaid, from the next message.')
+  expect(await compose(['terminal'])).toEqual(['intro', 'mermaid-view:diagrams'])
 })
 
 test('mermaid.live 링크에 원문을 담고, 링크에 담기에 너무 긴 원문은 링크를 뺀다', async ($, on) => {

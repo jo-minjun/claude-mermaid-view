@@ -3,7 +3,20 @@ import type { Register } from 'claude-code'
 
 import { liveEditorUrl, rewriteMermaid } from './mermaid'
 
-const COMMAND = 'mermaid-source'
+const SOURCE_COMMAND = 'mermaid-source'
+const PROMPT_COMMAND = 'mermaid-prompt'
+// 세션이 바뀌어도 유지하려고 $.state 대신 $.store에 둔다. 값이 없으면 켜진 것으로 본다
+const PROMPT_STORE_KEY = 'isPromptOn'
+const PROMPT_SECTION = {
+  id: 'mermaid-view:diagrams',
+  text: [
+    'When you draw a diagram in a reply, write it as a ```mermaid code block instead of ASCII art: this session draws mermaid blocks as text diagrams in the terminal.',
+    'Use flowchart, sequenceDiagram, classDiagram, erDiagram, stateDiagram-v2 or xychart-beta; other diagram types stay as source.',
+    'Keep labels and participant names short. Flowchart node ids must be ASCII; labels may be in any language.',
+    "The user's own instructions about diagrams come first.",
+  ].join(' '),
+  scope: 'session',
+} as const
 // 답변 앞 글머리(● )와 코드 블록 들여쓰기가 차지하는 칸
 const REPLY_GUTTER_COLUMNS = 4
 // 터미널이 답변 본문을 글머리 뒤로 들이는 칸
@@ -15,17 +28,42 @@ const showAllSources = atom({ plugin: 'mermaid-view', key: 'showAllSources' } as
 export const register: Register = on => {
   on('session.start', async ($, e, next) => {
     await $.command.register({
-      name: COMMAND,
+      name: SOURCE_COMMAND,
       description: 'Show or fold the mermaid source under every diagram',
+    })
+    await $.command.register({
+      name: PROMPT_COMMAND,
+      description: 'Turn on or off asking Claude to draw diagrams as mermaid',
     })
 
     return next(e)
   })
 
-  on('command.run', { command: COMMAND }, async $ => {
+  on('command.run', { command: SOURCE_COMMAND }, async $ => {
     const isShown = await update($, showAllSources, shown => !shown)
 
     return { text: isShown ? 'Showing every mermaid source.' : 'Folded every mermaid source.' }
+  })
+
+  on('command.run', { command: PROMPT_COMMAND }, async $ => {
+    const isOn = (await $.store.get(PROMPT_STORE_KEY)) === false
+    await $.store.set(PROMPT_STORE_KEY, isOn)
+
+    return {
+      text: isOn
+        ? 'Asking Claude to draw diagrams as mermaid, from the next message.'
+        : 'Stopped asking Claude to draw diagrams as mermaid, from the next message.',
+    }
+  })
+
+  // 다이어그램을 그려 줄 화면이 없는 요청(헤드리스 등)에는 지시를 넣지 않는다
+  on('prompt.compose', async ($, e, next) => {
+    const composed = await next(e)
+    if (e.surfaces.length === 0 || (await $.store.get(PROMPT_STORE_KEY)) === false) {
+      return composed
+    }
+
+    return { sections: [...composed.sections, PROMPT_SECTION] }
   })
 
   on('ui.render', { component: 'AssistantMessage' }, async ($, e, next) => {

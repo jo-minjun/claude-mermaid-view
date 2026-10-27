@@ -126,6 +126,7 @@ claude plugin install mermaid-view --marketplace jo-minjun/claude-mermaid-view
 
 - **다이어그램 하나의 원문 보기:** 다이어그램 바로 아래의 `▸ show mermaid source`를 클릭하고, 다시 접으려면 `▾ hide mermaid source`를 클릭합니다. 답변 안의 다이어그램마다 버튼이 따로 있습니다. (클릭하려면 Claude Code의 fullscreen 모드처럼 마우스 입력을 받는 터미널 화면이어야 합니다.)
 - **모든 원문 펼치기/접기:** `/mermaid-source`를 실행합니다.
+- **mermaid로 그리게 하기 (기본 켜짐):** mod가 시스템 프롬프트로 Claude에게 "다이어그램을 그릴 때는 ASCII 그림 대신 mermaid 블록으로, 이 mod가 그릴 수 있는 종류로 그려라"고 지시합니다. 다이어그램을 더 자주 그리라는 지시는 아니고, 다이어그램에 관한 사용자 자신의 지시가 우선합니다. `/mermaid-prompt`로 끄고 켭니다. 설정은 세션이 바뀌어도 유지되고, 다음 메시지부터 적용됩니다.
 - **mermaid.live에서 열기:** 버튼 옆 링크를 누르면 [mermaid.live](https://mermaid.live) 편집기에 다이어그램이 열리고, 거기서 고치거나 SVG/PNG로 내려받을 수 있습니다. 원문은 링크의 `#` 뒷부분(fragment)에 담기는데, 브라우저는 이 부분을 서버로 보내지 않고 페이지가 브라우저 안에서 읽습니다. 인코딩한 길이가 2048자를 넘는 원문에는 링크가 붙지 않습니다.
 - **원본 텍스트:** 바뀌는 것은 화면에 그리는 모습뿐입니다. 저장된 메시지와 Claude가 다시 읽는 내용에는 mermaid 원문이 그대로 남습니다.
 
