@@ -1,5 +1,7 @@
 # claude-mermaid-view
 
+English | [한국어](README.ko.md)
+
 A [Claude Code](https://claude.com/claude-code) mod that draws the ` ```mermaid ` code blocks in Claude's replies as text diagrams, right in the terminal. The mermaid source is folded under each diagram, one click away.
 
 ![A reply's sequence diagram drawn in the terminal, its source unfolded and folded again, then opened in mermaid.live](docs/demo.gif)
@@ -148,7 +150,7 @@ Known limits, from the renderer:
 
 The mod hooks Claude Code's `ui.render` for `AssistantMessage` rows. For each closed mermaid fence it renders the source with the bundled renderer and passes the rewritten markdown on to Claude Code's own reply renderer. The reply is drawn in pieces split after each diagram, so each diagram's toggle button sits right under it.
 
-The renderer counts every character as one column. To lay out wide characters correctly, the mod appends a one-column filler letter (U+A4D0) after each wide character before rendering and strips it from the output.
+The renderer measures text by JavaScript string length, so a Korean character counts as one column though a terminal draws it in two. Before rendering, the mod appends one-column filler letters (U+A4D0) after each wide character to make up the difference, and strips them from the output. An emoji such as `😀` already has a string length of two and gets no filler.
 
 ## Development
 
