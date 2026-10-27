@@ -84,6 +84,25 @@ test('/mermaid-source 는 모든 원문을 펼치고 버튼을 숨긴다', async
   await ui.unmount()
 })
 
+test('인용문 안의 블록도 인용문 표시를 유지한 채 그린다', async ($, on) => {
+  drawMarkdown(on)
+  const quoted = '> 설명.\n>\n> ```mermaid\n> flowchart TD\n>   A[주문 생성]\n> ```'
+  const ui = await $.ui.mount({ ...reply(quoted), surface: 'terminal' })
+
+  const quotedArt = ART.split('\n').map(line => `> ${line}`)
+  expect((await ui.find({ type: 'Markdown' }))?.text).toBe(
+    ['> 설명.', '>', '> ```', ...quotedArt, '> ```'].join('\n'),
+  )
+
+  await ui.press({ key: 'source-0' })
+  expect((await ui.find({ type: 'Markdown' }))?.text).toBe(
+    ['> 설명.', '>', '> ```', ...quotedArt, '> ```', '>', '> ```mermaid', '> flowchart TD', '>   A[주문 생성]', '> ```'].join(
+      '\n',
+    ),
+  )
+  await ui.unmount()
+})
+
 test('이모지도 한글처럼 2칸으로 맞춰 그린다', async ($, on) => {
   drawMarkdown(on)
   const ui = await $.ui.mount({ ...reply('```mermaid\nflowchart LR\n  A[✅] --> B[😀]\n```'), surface: 'terminal' })

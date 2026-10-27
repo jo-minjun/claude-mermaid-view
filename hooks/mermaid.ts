@@ -20,8 +20,11 @@ export type RewriteResult = {
   rendered: number[]
 }
 
+// 들여쓰기 앞에 인용문 표시(`> `)가 붙은 블록도 잡는다
 const MERMAID_FENCE =
-  /^([ \t]*)(`{3,}|~{3,})[ \t]*mermaid[ \t]*\r?\n([\s\S]*?)\r?\n[ \t]*\2[ \t]*$/gm
+  /^((?:[ \t]*>)*[ \t]*)(`{3,}|~{3,})[ \t]*mermaid[ \t]*\r?\n([\s\S]*?)\r?\n(?:[ \t]*>)*[ \t]*\2[ \t]*$/gm
+const QUOTE_MARKER = /^[ \t]*>[ \t]?/
+const QUOTE_MARKERS = /^(?:[ \t]*>[ \t]?)*/
 
 // 터미널에서 2칸을 차지하는 글자: 한글, CJK, 전각 기호, 기본으로 그림으로 그리는 이모지(✅, 😀 등)
 const WIDE_CHAR =
@@ -29,8 +32,8 @@ const WIDE_CHAR =
 
 // 렌더러는 글자 폭을 문자열 length로 세므로, 넓은 글자 뒤에 모자란 칸만큼 1칸짜리 채움 글자를 붙여
 // 자리를 잡게 한 뒤 출력에서 지운다. 😀처럼 서로게이트 쌍인 글자는 이미 2로 세어져 붙이지 않는다.
-// state 다이어그램의 이름이 \p{L} 만 받아서
-// 채움 글자도 문자(Lisu, U+A4D0)여야 하고, 실제 다이어그램에 나올 일이 거의 없는 것을 고른다.
+// state 다이어그램의 이름이 \p{L} 만 받아서 채움 글자도 문자(Lisu, U+A4D0)여야 하고,
+// 실제 다이어그램에 나올 일이 거의 없는 것을 고른다.
 const WIDTH_PAD = 'ꓐ'
 
 // 화면보다 넓을 때 한 번 더 그려 보는 좁은 간격. flowchart·state 렌더러만 읽는다.
@@ -55,11 +58,22 @@ export function findMermaidBlocks(text: string): MermaidBlock[] {
     const indent = match[1] ?? ''
     const source = (match[3] ?? '')
       .split('\n')
-      .map(line => (line.startsWith(indent) ? line.slice(indent.length) : line))
+      .map(line => stripPrefix(line, indent))
       .join('\n')
 
     return { start: match.index, end: match.index + match[0].length, indent, source }
   })
+}
+
+// 인용문 안의 빈 줄은 `>` 뒤 공백이 없을 수 있어서, 표시는 깊이만큼 하나씩 떼고 나머지 들여쓰기를 뗀다
+function stripPrefix(line: string, indent: string): string {
+  let rest = line
+  for (let depth = indent.split('>').length - 1; depth > 0; depth--) {
+    rest = rest.replace(QUOTE_MARKER, '')
+  }
+  const innerIndent = indent.replace(QUOTE_MARKERS, '')
+
+  return rest.startsWith(innerIndent) ? rest.slice(innerIndent.length) : rest
 }
 
 export function displayWidth(line: string): number {
@@ -179,14 +193,18 @@ export function rewriteMermaid(
   let cursor = 0
 
   blocks.forEach((block, index) => {
-    const art = renderFitting(block.source, options.maxColumns)
+    // 들여쓰기와 인용문 표시가 차지하는 칸만큼 다이어그램이 쓸 폭이 줄어든다
+    const maxColumns =
+      options.maxColumns === undefined ? undefined : options.maxColumns - displayWidth(block.indent)
+    const art = renderFitting(block.source, maxColumns)
     if (art === null) {
       return
     }
 
     let part = text.slice(cursor, block.start) + fence(block.indent, '', art)
     if (options.isSourceOpen(index)) {
-      part += '\n\n' + fence(block.indent, 'mermaid', block.source)
+      // 사이의 빈 줄에도 인용문 표시를 남겨야 인용문이 끊기지 않는다
+      part += `\n${block.indent.trimEnd()}\n` + fence(block.indent, 'mermaid', block.source)
     }
     parts.push({ text: part, diagram: index })
     cursor = block.end

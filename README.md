@@ -96,7 +96,7 @@ claude plugin install mermaid-view --marketplace jo-minjun/claude-mermaid-view
 
 ## Usage
 
-Nothing to set up: mermaid blocks in replies are drawn as diagrams from then on.
+Nothing to set up: mermaid blocks in replies are drawn as diagrams from then on. Blocks inside a list item or a blockquote are drawn in place.
 
 - **Show the source of one diagram:** click `▸ show mermaid source` right under it, and `▾ hide mermaid source` to fold it again. Each diagram in a reply has its own button. (Clicking needs a terminal layout that takes mouse input, such as Claude Code's fullscreen mode.)
 - **Show or fold every source:** run `/mermaid-source`.
