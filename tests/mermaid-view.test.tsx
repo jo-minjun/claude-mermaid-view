@@ -45,8 +45,10 @@ test('다이어그램마다 바로 밑에 원문 버튼을 두고, 누른 다이
     expect(await drawn()).toEqual([
       `첫 번째.\n\n\`\`\`\n${ART}\n\`\`\``,
       '[source-0]',
+      '[copy-0]',
       `두 번째.\n\n\`\`\`\n${ART}\n\`\`\``,
       '[source-1]',
+      '[copy-1]',
       '끝.',
     ])
 
@@ -54,8 +56,10 @@ test('다이어그램마다 바로 밑에 원문 버튼을 두고, 누른 다이
     expect(await drawn()).toEqual([
       `첫 번째.\n\n\`\`\`\n${ART}\n\`\`\``,
       '[source-0]',
+      '[copy-0]',
       `두 번째.\n\n\`\`\`\n${ART}\n\`\`\`\n\n${FLOWCHART}`,
       '[source-1]',
+      '[copy-1]',
       '끝.',
     ])
     expect((await ui.find({ key: 'source-0' }))?.props.label).toBe('▸ show mermaid source')
@@ -248,21 +252,52 @@ test('참가자 박스 높이가 달라도 생명선은 각 박스 바로 밑에
   await ui.unmount()
 })
 
-test('변환할 수 없거나 아직 닫히지 않았거나 화면보다 넓으면 원문 그대로 두고, 닫힌 블록에는 mermaid.live 링크만 단다', async ($, on) => {
+test('변환할 수 없거나 아직 닫히지 않았거나 화면보다 넓으면 원문 그대로 두고, 닫힌 블록에는 복사 버튼과 링크만 단다', async ($, on) => {
   drawMarkdown(on)
   const cases = [
-    { target: reply('```mermaid\npie\n  "a": 1\n```'), links: 1 },
-    { target: reply('```mermaid\nflowchart TD\n  A[주문 생성]'), links: 0 },
-    { target: reply('```mermaid\nflowchart LR\n  A[아주 긴 라벨 하나] --> B[아주 긴 라벨 둘]\n```', 30), links: 1 },
+    { target: reply('```mermaid\npie\n  "a": 1\n```'), buttons: ['copy-0'], links: 1 },
+    { target: reply('```mermaid\nflowchart TD\n  A[주문 생성]'), buttons: [], links: 0 },
+    {
+      target: reply('```mermaid\nflowchart LR\n  A[아주 긴 라벨 하나] --> B[아주 긴 라벨 둘]\n```', 30),
+      buttons: ['copy-0'],
+      links: 1,
+    },
   ]
 
-  for (const { target, links } of cases) {
+  for (const { target, buttons, links } of cases) {
     const ui = await $.ui.mount({ ...target, surface: 'terminal' })
     expect((await ui.find({ type: 'Markdown' }))?.text).toBe(target.props.text)
-    expect(await ui.findAll({ type: 'Button' })).toHaveLength(0)
+    expect((await ui.findAll({ type: 'Button' })).map(button => button.key)).toEqual(buttons)
     expect(await ui.findAll({ type: 'Link' })).toHaveLength(links)
     await ui.unmount()
   }
+})
+
+test('복사 버튼은 누른 블록의 원문을 클립보드에 넣고 결과를 알린다', async ($, on) => {
+  drawMarkdown(on)
+  const copied: string[] = []
+  const toasts: string[] = []
+  let isClipboardReady = true
+  on('ui.copy', (_, e) => {
+    copied.push(e.text)
+    return { value: isClipboardReady ? { isCopied: true } : { isCopied: false, reason: 'no-clipboard' } }
+  })
+  on('ui.toast', (_, e) => {
+    toasts.push(e.text)
+    return { value: undefined }
+  })
+  const ui = await $.ui.mount({
+    ...reply(`${FLOWCHART}\n\n\`\`\`mermaid\npie\n  "a": 1\n\`\`\``),
+    surface: 'terminal',
+  })
+
+  await ui.press({ key: 'copy-1' })
+  isClipboardReady = false
+  await ui.press({ key: 'copy-0' })
+
+  expect(copied).toEqual(['pie\n  "a": 1', 'flowchart TD\n  A[주문 생성]'])
+  expect(toasts).toEqual(['Copied mermaid source.', "Couldn't copy mermaid source."])
+  await ui.unmount()
 })
 
 test('다이어그램 뒤 조각은 첫 조각의 본문 칸에 맞춰 들인다', async ($, on) => {

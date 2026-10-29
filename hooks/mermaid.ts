@@ -7,14 +7,17 @@ export type MermaidBlock = {
   source: string
 }
 
-/**
- * 답변을 mermaid 블록마다 끊은 조각. `diagram`이 있으면 그 순번(메시지 안에서 0부터)의 다이어그램으로 끝나고,
- * `liveUrl`이 있으면 그 블록을 mermaid.live에서 여는 주소다
- */
+/** 답변을 닫힌 mermaid 블록마다 끊은 조각. `block`이 있으면 그 블록으로 끝난다 */
 export type ReplyPart = {
   text: string
-  diagram?: number
-  liveUrl?: string
+  block?: {
+    /** 메시지 안에서 0부터 센 블록 순번 */
+    index: number
+    source: string
+    isDrawn: boolean
+    /** mermaid.live에서 여는 주소. 링크에 담기에 너무 길면 없다 */
+    liveUrl?: string
+  }
 }
 
 export type RewriteResult = {
@@ -189,7 +192,7 @@ function wrapLabel(label: string, maxColumns: number): string {
 
 /**
  * mermaid 블록을 텍스트 다이어그램 코드 블록으로 바꾼다. 변환에 실패했거나
- * 다시 그려도 `maxColumns`보다 넓은 블록은 원문 그대로 두고, mermaid.live 주소를 담을 수 있으면 그 뒤에서 끊는다.
+ * 다시 그려도 `maxColumns`보다 넓은 블록은 원문 그대로 둔다. 어느 쪽이든 닫힌 블록 뒤에서 끊는다.
  */
 export function rewriteMermaid(
   text: string,
@@ -205,20 +208,15 @@ export function rewriteMermaid(
       options.maxColumns === undefined ? undefined : options.maxColumns - displayWidth(block.indent)
     const art = renderFitting(block.source, maxColumns)
     const liveUrl = liveEditorUrl(block.source) ?? undefined
-    if (art === null) {
-      if (liveUrl !== undefined) {
-        parts.push({ text: text.slice(cursor, block.end), liveUrl })
-        cursor = block.end
+    let part = text.slice(cursor, block.end)
+    if (art !== null) {
+      part = text.slice(cursor, block.start) + fence(block.indent, '', art)
+      if (options.isSourceOpen(index)) {
+        // 사이의 빈 줄에도 인용문 표시를 남겨야 인용문이 끊기지 않는다
+        part += `\n${block.indent.trimEnd()}\n` + fence(block.indent, 'mermaid', block.source)
       }
-      return
     }
-
-    let part = text.slice(cursor, block.start) + fence(block.indent, '', art)
-    if (options.isSourceOpen(index)) {
-      // 사이의 빈 줄에도 인용문 표시를 남겨야 인용문이 끊기지 않는다
-      part += `\n${block.indent.trimEnd()}\n` + fence(block.indent, 'mermaid', block.source)
-    }
-    parts.push({ text: part, diagram: index, liveUrl })
+    parts.push({ text: part, block: { index, source: block.source, isDrawn: art !== null, liveUrl } })
     cursor = block.end
   })
   parts.push({ text: text.slice(cursor) })
@@ -228,7 +226,7 @@ export function rewriteMermaid(
     // 조각 사이의 빈 줄은 조각을 따로 그릴 때의 간격과 겹치므로 덜어 낸다
     parts: parts
       .map((part, order) => (order === 0 ? part : { ...part, text: part.text.replace(/^\s*\n/, '') }))
-      .filter(part => part.diagram !== undefined || part.liveUrl !== undefined || part.text.trim() !== ''),
+      .filter(part => part.block !== undefined || part.text.trim() !== ''),
   }
 }
 

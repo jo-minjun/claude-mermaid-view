@@ -37,7 +37,7 @@ flowchart LR
                          └────no─────►│ Cancel │
                                       │        │
                                       └────────┘
-▸ show mermaid source  ·  open in mermaid.live
+▸ show mermaid source  ·  copy source  ·  open in mermaid.live
 ```
 
 ER 다이어그램은 컬럼, 키, 관계 차수를 그대로 보여 줍니다.
@@ -125,9 +125,10 @@ claude plugin install mermaid-view --marketplace jo-minjun/claude-mermaid-view
 따로 설정할 것은 없습니다. 설치한 뒤부터 답변의 mermaid 블록이 다이어그램으로 그려집니다. 목록이나 인용문 안의 블록도 그 자리에 그려집니다.
 
 - **다이어그램 하나의 원문 보기:** 다이어그램 바로 아래의 `▸ show mermaid source`를 클릭하고, 다시 접으려면 `▾ hide mermaid source`를 클릭합니다. 답변 안의 다이어그램마다 버튼이 따로 있습니다. (클릭하려면 Claude Code의 fullscreen 모드처럼 마우스 입력을 받는 터미널 화면이어야 합니다.)
+- **원문 복사:** `copy source`를 클릭하면 다이어그램의 mermaid 원문(펜스 제외)이 `/copy`와 같은 방식으로 클립보드에 들어가고, 성공 여부가 알림으로 뜹니다.
 - **모든 원문 펼치기/접기:** `/mermaid-source`를 실행합니다.
 - **mermaid로 그리게 하기 (기본 켜짐):** mod가 시스템 프롬프트로 Claude에게 "다이어그램을 그릴 때는 ASCII 그림 대신 mermaid 블록으로, 이 mod가 그릴 수 있는 종류로 그려라"고 지시합니다. 다이어그램을 더 자주 그리라는 지시는 아니고, 다이어그램에 관한 사용자 자신의 지시가 우선합니다. `/mermaid-prompt`로 끄고 켭니다. 설정은 세션이 바뀌어도 유지되고, 다음 메시지부터 적용됩니다.
-- **mermaid.live에서 열기:** 버튼 옆(원문 그대로 둔 블록은 원문 아래)의 링크를 누르면 [mermaid.live](https://mermaid.live) 편집기에 다이어그램이 열리고, 거기서 고치거나 SVG/PNG로 내려받을 수 있습니다. 원문은 링크의 `#` 뒷부분(fragment)에 담기는데, 브라우저는 이 부분을 서버로 보내지 않고 페이지가 브라우저 안에서 읽습니다. 인코딩한 길이가 2048자를 넘는 원문에는 링크가 붙지 않습니다.
+- **mermaid.live에서 열기:** 같은 줄의 `open in mermaid.live` 링크를 누르면 [mermaid.live](https://mermaid.live) 편집기에 다이어그램이 열리고, 거기서 고치거나 SVG/PNG로 내려받을 수 있습니다. 원문은 링크의 `#` 뒷부분(fragment)에 담기는데, 브라우저는 이 부분을 서버로 보내지 않고 페이지가 브라우저 안에서 읽습니다. 인코딩한 길이가 2048자를 넘는 원문에는 링크가 붙지 않습니다.
 - **원본 텍스트:** 바뀌는 것은 화면에 그리는 모습뿐입니다. 저장된 메시지와 Claude가 다시 읽는 내용에는 mermaid 원문이 그대로 남습니다.
 
 다음 경우에는 블록을 원문 그대로 둡니다.
@@ -136,11 +137,11 @@ claude plugin install mermaid-view --marketplace jo-minjun/claude-mermaid-view
 - 다시 그려 봐도 다이어그램이 터미널보다 넓을 때. flowchart와 state 다이어그램은 간격을 좁혀서, sequence 다이어그램은 메시지 라벨과 참가자 이름을 단어 단위로 줄바꿈해서 다시 그립니다. 자기 자신에게 보내는 메시지는 렌더러가 여러 줄로 그리지 못해서 줄바꿈하지 않습니다.
 - 블록이 아직 스트리밍 중일 때 (닫는 펜스가 아직 없음)
 
-원문 그대로 둔 블록도 닫혀 있으면 원문 아래에 `open in mermaid.live` 링크가 붙어서, 렌더러가 그리지 못하는 다이어그램이나 터미널보다 넓은 다이어그램도 브라우저에서 볼 수 있습니다.
+원문 그대로 둔 블록도 닫혀 있으면 원문 아래에 `copy source` 버튼과 `open in mermaid.live` 링크가 붙어서, 렌더러가 그리지 못하는 다이어그램이나 터미널보다 넓은 다이어그램도 브라우저에서 볼 수 있습니다.
 
 ## 지원하는 다이어그램
 
-그리기는 [beautiful-mermaid](https://github.com/lukilabs/beautiful-mermaid)의 텍스트 렌더러가 맡습니다. `flowchart`/`graph`, `sequenceDiagram`, `classDiagram`, `erDiagram`, `stateDiagram-v2`, `xychart`를 지원합니다. 다른 종류(`pie`, `gantt`, `mindmap` 등)는 원문 그대로 남고, 그 아래에 mermaid.live 링크가 붙습니다.
+그리기는 [beautiful-mermaid](https://github.com/lukilabs/beautiful-mermaid)의 텍스트 렌더러가 맡습니다. `flowchart`/`graph`, `sequenceDiagram`, `classDiagram`, `erDiagram`, `stateDiagram-v2`, `xychart`를 지원합니다. 다른 종류(`pie`, `gantt`, `mindmap` 등)는 원문 그대로 남고, 그 아래에 복사 버튼과 mermaid.live 링크가 붙습니다.
 
 렌더러에서 오는 알려진 한계:
 

@@ -1,5 +1,5 @@
 import { atom, memberOf, read, update } from 'claude-code'
-import type { Register } from 'claude-code'
+import type { Register, RenderSurface } from 'claude-code'
 
 import { rewriteMermaid } from './mermaid'
 
@@ -79,7 +79,7 @@ export const register: Register = on => {
       maxColumns: columns === undefined ? undefined : columns - REPLY_GUTTER_COLUMNS,
       isSourceOpen: index => isAllShown || open.includes(index),
     })
-    if (parts.every(part => part.diagram === undefined && part.liveUrl === undefined)) {
+    if (parts.every(part => part.block === undefined)) {
       return next(e)
     }
     if (isAllShown) {
@@ -105,34 +105,48 @@ export const register: Register = on => {
       update($, member, list =>
         list.includes(index) ? list.filter(one => one !== index) : [...list, index],
       )
+    const copy = async (source: string, surface: RenderSurface) => {
+      const { isCopied } = await $.ui.copy({ text: source, surface })
+      $.ui.toast(isCopied ? 'Copied mermaid source.' : "Couldn't copy mermaid source.")
+    }
 
     return (
       <Box flexDirection="column">
-        {parts.flatMap(({ diagram, liveUrl }, order) => {
+        {parts.flatMap(({ block }, order) => {
           const part = order === 0 ? drawn[order] : <Box paddingLeft={continuationIndent}>{drawn[order]}</Box>
-          if (diagram === undefined && liveUrl === undefined) {
+          if (block === undefined) {
             return [part]
           }
 
-          // 그리지 못한 블록은 원문이 이미 보이므로 링크만 단다
+          // 그리지 못한 블록은 원문이 이미 보이므로 펼치는 버튼을 달지 않는다
+          const actions = [
+            block.isDrawn && (
+              <Button
+                key={`source-${block.index}`}
+                plain
+                dimColor
+                label={open.includes(block.index) ? '▾ hide mermaid source' : '▸ show mermaid source'}
+                onPress={() => toggle(block.index)}
+              />
+            ),
+            <Button
+              key={`copy-${block.index}`}
+              plain
+              dimColor
+              label="copy source"
+              onPress={press => copy(block.source, press.surface)}
+            />,
+            block.liveUrl !== undefined && (
+              <Text dimColor>
+                <Link href={block.liveUrl} label="open in mermaid.live" />
+              </Text>
+            ),
+          ].filter(action => action !== false)
+
           return [
             part,
             <Box paddingLeft={indent}>
-              {diagram !== undefined && (
-                <Button
-                  key={`source-${diagram}`}
-                  plain
-                  dimColor
-                  label={open.includes(diagram) ? '▾ hide mermaid source' : '▸ show mermaid source'}
-                  onPress={() => toggle(diagram)}
-                />
-              )}
-              {liveUrl !== undefined && (
-                <Text dimColor>
-                  {diagram !== undefined && '  ·  '}
-                  <Link href={liveUrl} label="open in mermaid.live" />
-                </Text>
-              )}
+              {actions.flatMap((action, at) => (at === 0 ? [action] : [<Text dimColor>{'  ·  '}</Text>, action]))}
             </Box>,
           ]
         })}
