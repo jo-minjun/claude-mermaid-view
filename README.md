@@ -21,24 +21,7 @@ flowchart LR
 
 The transcript shows:
 
-```
-┌──────────────┐     ◇───────◇        ┌────────┐
-│              │     │       │        │        │
-│ Create order ├────►│ Paid? │ ├─yes─►│  Ship  │
-│              │     │       │        │        │
-└──────────────┘     ◇───┬───◇        └────────┘
-                         │
-                         │
-                         │
-                         │
-                         │
-                         │            ┌────────┐
-                         │            │        │
-                         └────no─────►│ Cancel │
-                                      │        │
-                                      └────────┘
-▸ show mermaid source  ·  copy source  ·  open in mermaid.live
-```
+<img src="docs/example-flowchart.png" width="682" alt="Create order, Paid? and Ship/Cancel boxes drawn as a text flowchart in the terminal, with the show source, copy source and mermaid.live row under it">
 
 ER diagrams keep their columns, keys and cardinality:
 
@@ -58,31 +41,11 @@ erDiagram
 ```
 ````
 
-```
-┌─────────────────┐      ┌────────────────────────┐
-│ USER            │      │ ORDER                  │
-├─────────────────┤      ├────────────────────────┤
-│ PK bigint id    ││───○╟│ PK bigint id           │
-│    string email │places│ FK bigint user_id      │
-└─────────────────┘      │    datetime created_at │
-                         └────────────────────────┘
-```
+<img src="docs/example-er.png" width="682" alt="USER and ORDER tables drawn as a text ER diagram with their keys and the places relation">
 
 Korean, Chinese and Japanese labels and emoji are laid out at their real terminal width (two columns), so boxes stay aligned:
 
-```
-┌────────┐        ┌──────┐
-│ 사용자 │        │ 서버 │
-└────┬───┘        └───┬──┘
-     │                │
-     │  로그인 요청   │
-     │────────────────▶
-     │                │
-     │     토큰       │
-     ◀╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌│
-```
-
-(A browser font may not draw these characters at exactly two columns, so this example can look uneven on GitHub. It lines up in a terminal.)
+<img src="docs/example-sequence-ko.png" width="682" alt="A Korean sequence diagram between 사용자 and 서버 drawn in the terminal with aligned boxes">
 
 A block inside a blockquote (or a list item) is drawn in place, so it stays inside the quote:
 
@@ -96,15 +59,7 @@ A block inside a blockquote (or a list item) is drawn in place, so it stays insi
 > ```
 ````
 
-> **Retry policy**
->
-> ```
-> ┌───────┐     ◇───────◇     ┌────────────┐
-> │       │     │       │     │            │
-> │ Order ├────►│ Paid? ├─no─►│ Retry once │
-> │       │     │       │     │            │
-> └───────┘     ◇───────◇     └────────────┘
-> ```
+<img src="docs/example-blockquote.png" width="682" alt="A flowchart drawn inside a blockquote under the Retry policy heading">
 
 ## Install
 

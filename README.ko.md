@@ -21,24 +21,7 @@ flowchart LR
 
 대화 화면에는 이렇게 나옵니다.
 
-```
-┌──────────────┐     ◇───────◇        ┌────────┐
-│              │     │       │        │        │
-│ Create order ├────►│ Paid? │ ├─yes─►│  Ship  │
-│              │     │       │        │        │
-└──────────────┘     ◇───┬───◇        └────────┘
-                         │
-                         │
-                         │
-                         │
-                         │
-                         │            ┌────────┐
-                         │            │        │
-                         └────no─────►│ Cancel │
-                                      │        │
-                                      └────────┘
-▸ show mermaid source  ·  copy source  ·  open in mermaid.live
-```
+<img src="docs/example-flowchart.png" width="682" alt="Create order, Paid?, Ship/Cancel 상자가 터미널에 텍스트 flowchart로 그려지고, 그 아래에 원문 보기·복사·mermaid.live 줄이 있는 모습">
 
 ER 다이어그램은 컬럼, 키, 관계 차수를 그대로 보여 줍니다.
 
@@ -58,31 +41,11 @@ erDiagram
 ```
 ````
 
-```
-┌─────────────────┐      ┌────────────────────────┐
-│ USER            │      │ ORDER                  │
-├─────────────────┤      ├────────────────────────┤
-│ PK bigint id    ││───○╟│ PK bigint id           │
-│    string email │places│ FK bigint user_id      │
-└─────────────────┘      │    datetime created_at │
-                         └────────────────────────┘
-```
+<img src="docs/example-er.png" width="682" alt="USER와 ORDER 테이블이 키와 places 관계까지 텍스트 ER 다이어그램으로 그려진 모습">
 
 한글, 중국어, 일본어 라벨과 이모지는 터미널에서 실제로 차지하는 폭(2칸)으로 배치해서 박스 정렬이 맞습니다.
 
-```
-┌────────┐        ┌──────┐
-│ 사용자 │        │ 서버 │
-└────┬───┘        └───┬──┘
-     │                │
-     │  로그인 요청   │
-     │────────────────▶
-     │                │
-     │     토큰       │
-     ◀╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌│
-```
-
-(브라우저 글꼴은 이 글자들을 정확히 2칸으로 그리지 않아서 GitHub에서는 이 예시가 어긋나 보일 수 있습니다. 터미널에서는 정렬이 맞습니다.)
+<img src="docs/example-sequence-ko.png" width="682" alt="사용자와 서버 사이의 한글 sequence 다이어그램이 터미널에서 상자 정렬이 맞게 그려진 모습">
 
 인용문이나 목록 안에 있는 블록은 그 자리에 그대로 그려서, 인용문 안에 머뭅니다.
 
@@ -96,15 +59,7 @@ erDiagram
 > ```
 ````
 
-> **Retry policy**
->
-> ```
-> ┌───────┐     ◇───────◇     ┌────────────┐
-> │       │     │       │     │            │
-> │ Order ├────►│ Paid? ├─no─►│ Retry once │
-> │       │     │       │     │            │
-> └───────┘     ◇───────◇     └────────────┘
-> ```
+<img src="docs/example-blockquote.png" width="682" alt="Retry policy 제목 아래 인용문 안에 flowchart가 그려진 모습">
 
 ## 설치
 
