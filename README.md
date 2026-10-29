@@ -13,6 +13,7 @@ A [Claude Code](https://claude.com/claude-code) mod that draws the ` ```mermaid 
 - Lines up Korean, Chinese, Japanese and emoji labels at their real terminal width
 - Draws blocks inside blockquotes and list items in place
 - Under each diagram: show the source, copy it, or open it in mermaid.live
+- `/mermaid-source` shows or folds every diagram's source at once
 - Asks Claude to draw diagrams as mermaid instead of ASCII art (on by default, `/mermaid-prompt` to toggle)
 - Leaves the stored message untouched; only the drawing changes
 
