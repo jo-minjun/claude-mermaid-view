@@ -127,7 +127,7 @@ Nothing to set up: mermaid blocks in replies are drawn as diagrams from then on.
 - **Show the source of one diagram:** click `▸ show mermaid source` right under it, and `▾ hide mermaid source` to fold it again. Each diagram in a reply has its own button. (Clicking needs a terminal layout that takes mouse input, such as Claude Code's fullscreen mode.)
 - **Show or fold every source:** run `/mermaid-source`.
 - **Diagrams as mermaid by default:** the mod asks Claude, in its system prompt, to draw any diagram as a mermaid block instead of ASCII art, using the diagram types the mod can draw. It does not ask for more diagrams, and your own instructions about diagrams come first. Run `/mermaid-prompt` to turn this off or back on; the choice is kept across sessions and applies from the next message.
-- **Open in mermaid.live:** the link beside the button opens the diagram in the [mermaid.live](https://mermaid.live) editor, where it can be edited or exported as SVG or PNG. The source rides in the link's `#` fragment, which the browser does not send to the server; the page reads it in the browser. A source too long for a link (over 2048 characters once encoded) gets no link.
+- **Open in mermaid.live:** the link beside the button (or under a block left as source) opens the diagram in the [mermaid.live](https://mermaid.live) editor, where it can be edited or exported as SVG or PNG. The source rides in the link's `#` fragment, which the browser does not send to the server; the page reads it in the browser. A source too long for a link (over 2048 characters once encoded) gets no link.
 - **Original text:** only the drawing changes. The stored message and what Claude reads back keep the mermaid source.
 
 A block is left as its source when:
@@ -136,9 +136,11 @@ A block is left as its source when:
 - the diagram is wider than the terminal, even after a retry: a flowchart or state diagram is redrawn with tighter spacing, and a sequence diagram with its message labels and participant names wrapped at word breaks (self-messages are not wrapped, since the renderer cannot draw them on several lines),
 - the block is still streaming (no closing fence yet).
 
+A closed block left as source still gets the `open in mermaid.live` link under it, so a diagram the renderer cannot draw, or one too wide for the terminal, can be seen in the browser.
+
 ## Supported diagrams
 
-Rendering is done by [beautiful-mermaid](https://github.com/lukilabs/beautiful-mermaid)'s text renderer: `flowchart`/`graph`, `sequenceDiagram`, `classDiagram`, `erDiagram`, `stateDiagram-v2` and `xychart`. Other types (`pie`, `gantt`, `mindmap`, …) stay as source.
+Rendering is done by [beautiful-mermaid](https://github.com/lukilabs/beautiful-mermaid)'s text renderer: `flowchart`/`graph`, `sequenceDiagram`, `classDiagram`, `erDiagram`, `stateDiagram-v2` and `xychart`. Other types (`pie`, `gantt`, `mindmap`, …) stay as source, with the mermaid.live link under them.
 
 Known limits, from the renderer:
 

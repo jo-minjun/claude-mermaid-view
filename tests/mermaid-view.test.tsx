@@ -248,18 +248,19 @@ test('참가자 박스 높이가 달라도 생명선은 각 박스 바로 밑에
   await ui.unmount()
 })
 
-test('변환할 수 없거나 아직 닫히지 않았거나 화면보다 넓으면 원문 그대로 둔다', async ($, on) => {
+test('변환할 수 없거나 아직 닫히지 않았거나 화면보다 넓으면 원문 그대로 두고, 닫힌 블록에는 mermaid.live 링크만 단다', async ($, on) => {
   drawMarkdown(on)
   const cases = [
-    reply('```mermaid\npie\n  "a": 1\n```'),
-    reply('```mermaid\nflowchart TD\n  A[주문 생성]'),
-    reply('```mermaid\nflowchart LR\n  A[아주 긴 라벨 하나] --> B[아주 긴 라벨 둘]\n```', 30),
+    { target: reply('```mermaid\npie\n  "a": 1\n```'), links: 1 },
+    { target: reply('```mermaid\nflowchart TD\n  A[주문 생성]'), links: 0 },
+    { target: reply('```mermaid\nflowchart LR\n  A[아주 긴 라벨 하나] --> B[아주 긴 라벨 둘]\n```', 30), links: 1 },
   ]
 
-  for (const target of cases) {
+  for (const { target, links } of cases) {
     const ui = await $.ui.mount({ ...target, surface: 'terminal' })
     expect((await ui.find({ type: 'Markdown' }))?.text).toBe(target.props.text)
     expect(await ui.findAll({ type: 'Button' })).toHaveLength(0)
+    expect(await ui.findAll({ type: 'Link' })).toHaveLength(links)
     await ui.unmount()
   }
 })

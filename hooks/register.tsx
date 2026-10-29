@@ -1,7 +1,7 @@
 import { atom, memberOf, read, update } from 'claude-code'
 import type { Register } from 'claude-code'
 
-import { liveEditorUrl, rewriteMermaid } from './mermaid'
+import { rewriteMermaid } from './mermaid'
 
 const SOURCE_COMMAND = 'mermaid-source'
 const PROMPT_COMMAND = 'mermaid-prompt'
@@ -75,18 +75,18 @@ export const register: Register = on => {
     const open = await read($, member)
     const isAllShown = await read($, showAllSources)
     const columns = e.viewport?.columns
-    const { text, parts, rendered } = rewriteMermaid(e.props.text, {
+    const { text, parts } = rewriteMermaid(e.props.text, {
       maxColumns: columns === undefined ? undefined : columns - REPLY_GUTTER_COLUMNS,
       isSourceOpen: index => isAllShown || open.includes(index),
     })
-    if (rendered.length === 0) {
+    if (parts.every(part => part.diagram === undefined && part.liveUrl === undefined)) {
       return next(e)
     }
     if (isAllShown) {
       return next({ ...e, props: { ...e.props, text } })
     }
 
-    // 버튼을 각 다이어그램 바로 밑에 두려고 조각마다 엔진의 답변 렌더러로 그린다.
+    // 버튼과 링크를 각 블록 바로 밑에 두려고 조각마다 엔진의 답변 렌더러로 그린다.
     // 글머리(●)는 첫 조각에만 남긴다.
     const drawn = await Promise.all(
       parts.map((part, order) =>
@@ -108,30 +108,33 @@ export const register: Register = on => {
 
     return (
       <Box flexDirection="column">
-        {parts.flatMap(({ diagram, source }, order) => {
+        {parts.flatMap(({ diagram, liveUrl }, order) => {
           const part = order === 0 ? drawn[order] : <Box paddingLeft={continuationIndent}>{drawn[order]}</Box>
-          const liveUrl = source === undefined ? null : liveEditorUrl(source)
+          if (diagram === undefined && liveUrl === undefined) {
+            return [part]
+          }
 
-          return diagram === undefined
-            ? [part]
-            : [
-                part,
-                <Box paddingLeft={indent}>
-                  <Button
-                    key={`source-${diagram}`}
-                    plain
-                    dimColor
-                    label={open.includes(diagram) ? '▾ hide mermaid source' : '▸ show mermaid source'}
-                    onPress={() => toggle(diagram)}
-                  />
-                  {liveUrl !== null && (
-                    <Text dimColor>
-                      {'  ·  '}
-                      <Link href={liveUrl} label="open in mermaid.live" />
-                    </Text>
-                  )}
-                </Box>,
-              ]
+          // 그리지 못한 블록은 원문이 이미 보이므로 링크만 단다
+          return [
+            part,
+            <Box paddingLeft={indent}>
+              {diagram !== undefined && (
+                <Button
+                  key={`source-${diagram}`}
+                  plain
+                  dimColor
+                  label={open.includes(diagram) ? '▾ hide mermaid source' : '▸ show mermaid source'}
+                  onPress={() => toggle(diagram)}
+                />
+              )}
+              {liveUrl !== undefined && (
+                <Text dimColor>
+                  {diagram !== undefined && '  ·  '}
+                  <Link href={liveUrl} label="open in mermaid.live" />
+                </Text>
+              )}
+            </Box>,
+          ]
         })}
       </Box>
     )

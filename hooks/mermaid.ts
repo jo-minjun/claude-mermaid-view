@@ -7,18 +7,19 @@ export type MermaidBlock = {
   source: string
 }
 
-/** 답변을 다이어그램마다 끊은 조각. `diagram`이 있으면 그 다이어그램으로 끝나고, `source`는 그 원문이다 */
+/**
+ * 답변을 mermaid 블록마다 끊은 조각. `diagram`이 있으면 그 순번(메시지 안에서 0부터)의 다이어그램으로 끝나고,
+ * `liveUrl`이 있으면 그 블록을 mermaid.live에서 여는 주소다
+ */
 export type ReplyPart = {
   text: string
   diagram?: number
-  source?: string
+  liveUrl?: string
 }
 
 export type RewriteResult = {
   text: string
   parts: ReplyPart[]
-  /** 다이어그램으로 바뀐 블록의 순번(메시지 안에서 0부터) */
-  rendered: number[]
 }
 
 // 들여쓰기 앞에 인용문 표시(`> `)가 붙은 블록도 잡는다
@@ -188,7 +189,7 @@ function wrapLabel(label: string, maxColumns: number): string {
 
 /**
  * mermaid 블록을 텍스트 다이어그램 코드 블록으로 바꾼다. 변환에 실패했거나
- * 다시 그려도 `maxColumns`보다 넓은 블록은 원문 그대로 둔다.
+ * 다시 그려도 `maxColumns`보다 넓은 블록은 원문 그대로 두고, mermaid.live 주소를 담을 수 있으면 그 뒤에서 끊는다.
  */
 export function rewriteMermaid(
   text: string,
@@ -203,7 +204,12 @@ export function rewriteMermaid(
     const maxColumns =
       options.maxColumns === undefined ? undefined : options.maxColumns - displayWidth(block.indent)
     const art = renderFitting(block.source, maxColumns)
+    const liveUrl = liveEditorUrl(block.source) ?? undefined
     if (art === null) {
+      if (liveUrl !== undefined) {
+        parts.push({ text: text.slice(cursor, block.end), liveUrl })
+        cursor = block.end
+      }
       return
     }
 
@@ -212,7 +218,7 @@ export function rewriteMermaid(
       // 사이의 빈 줄에도 인용문 표시를 남겨야 인용문이 끊기지 않는다
       part += `\n${block.indent.trimEnd()}\n` + fence(block.indent, 'mermaid', block.source)
     }
-    parts.push({ text: part, diagram: index, source: block.source })
+    parts.push({ text: part, diagram: index, liveUrl })
     cursor = block.end
   })
   parts.push({ text: text.slice(cursor) })
@@ -222,8 +228,7 @@ export function rewriteMermaid(
     // 조각 사이의 빈 줄은 조각을 따로 그릴 때의 간격과 겹치므로 덜어 낸다
     parts: parts
       .map((part, order) => (order === 0 ? part : { ...part, text: part.text.replace(/^\s*\n/, '') }))
-      .filter(part => part.diagram !== undefined || part.text.trim() !== ''),
-    rendered: parts.flatMap(part => (part.diagram === undefined ? [] : [part.diagram])),
+      .filter(part => part.diagram !== undefined || part.liveUrl !== undefined || part.text.trim() !== ''),
   }
 }
 
@@ -234,7 +239,7 @@ function fence(indent: string, language: string, body: string): string {
 }
 
 /** 원문을 편집기에 띄우는 mermaid.live 주소. Link에 담기에 너무 길면 null */
-export function liveEditorUrl(source: string): string | null {
+function liveEditorUrl(source: string): string | null {
   const state = JSON.stringify({ code: source, mermaid: '{"theme":"default"}', updateDiagram: true, rough: false })
   const bytes = new TextEncoder().encode(state)
   const base64 = btoa(Array.from(bytes, byte => String.fromCharCode(byte)).join(''))
