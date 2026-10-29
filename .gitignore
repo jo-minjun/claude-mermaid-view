@@ -1,0 +1,2 @@
+# 로컬 타입 검사용. claude --plugin-dir 세션이 만든다
+/tsconfig.json
