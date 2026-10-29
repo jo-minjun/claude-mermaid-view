@@ -4,7 +4,7 @@
 
 Claude 답변의 ` ```mermaid ` 코드 블록을 터미널 안에서 텍스트 다이어그램으로 그려 주는 [Claude Code](https://claude.com/claude-code) mod입니다. mermaid 원문은 각 다이어그램 아래에 접혀 있어서 클릭 한 번으로 펼칠 수 있습니다.
 
-![터미널에 그려진 sequence 다이어그램의 원문을 펼쳤다 접은 뒤 mermaid.live에서 여는 모습](docs/demo.gif)
+![터미널에 그려진 sequence 다이어그램의 원문을 펼쳤다 접고, 클립보드에 복사한 뒤 mermaid.live에서 여는 모습](docs/demo.gif)
 
 ## 기능
 
