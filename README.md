@@ -6,6 +6,16 @@ A [Claude Code](https://claude.com/claude-code) mod that draws the ` ```mermaid 
 
 ![A reply's sequence diagram drawn in the terminal, its source unfolded and folded again, then opened in mermaid.live](docs/demo.gif)
 
+## Features
+
+- Draws mermaid flowchart, sequence, class, ER, state and xychart blocks as text diagrams in the transcript
+- Fits the terminal: a wide diagram is redrawn with tighter spacing or wrapped labels
+- Lines up Korean, Chinese, Japanese and emoji labels at their real terminal width
+- Draws blocks inside blockquotes and list items in place
+- Under each diagram: show the source, copy it, or open it in mermaid.live
+- Asks Claude to draw diagrams as mermaid instead of ASCII art (on by default, `/mermaid-prompt` to toggle)
+- Leaves the stored message untouched; only the drawing changes
+
 ## Example
 
 Claude replies with:
