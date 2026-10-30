@@ -6,6 +6,10 @@ A [Claude Code](https://claude.com/claude-code) mod that draws the ` ```mermaid 
 
 ![A reply's sequence diagram drawn in the terminal, its source unfolded and folded again, copied to the clipboard, then opened in mermaid.live](docs/demo.gif)
 
+## Why
+
+Claude can draw good ASCII diagrams, but they only live in the terminal. They break in docs, PRs and Slack, and changing one means redrawing it. Mermaid is a source you can paste into docs, edit line by line, and feed back to Claude, but in the terminal it is just code. This mod keeps Mermaid as the source and shows it as a picture in the terminal.
+
 ## Features
 
 - Draws mermaid flowchart, sequence, class, ER, state and xychart blocks as text diagrams in the transcript

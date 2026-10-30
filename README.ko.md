@@ -6,6 +6,10 @@ Claude 답변의 ` ```mermaid ` 코드 블록을 터미널 안에서 텍스트 �
 
 ![터미널에 그려진 sequence 다이어그램의 원문을 펼쳤다 접고, 클립보드에 복사한 뒤 mermaid.live에서 여는 모습](docs/demo.gif)
 
+## 왜 만들었나
+
+Claude는 ASCII 다이어그램도 잘 그리지만, 그 그림은 터미널 안에서만 쓸 수 있습니다. 문서, PR, Slack에 옮기면 정렬이 깨지고, 고치려면 처음부터 다시 그려야 합니다. mermaid는 문서에 붙여 넣고, 한 줄씩 고치고, Claude에게 다시 넘길 수 있는 원본이지만, 터미널에서는 코드로만 보입니다. 이 mod는 원본은 mermaid로 두고, 터미널에서는 그림으로 보여 줍니다.
+
 ## 기능
 
 - mermaid flowchart, sequence, class, ER, state, xychart 블록을 대화 화면에 텍스트 다이어그램으로 그립니다
